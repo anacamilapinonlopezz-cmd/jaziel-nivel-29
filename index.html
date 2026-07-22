@@ -1,0 +1,766 @@
+/*==================================================
+                PLAYER ONE V2
+                game.js
+==================================================*/
+
+/*=========================================
+            ELEMENTOS HTML
+=========================================*/
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+const menu = document.getElementById("menu");
+const hud = document.getElementById("hud");
+const dialogBox = document.getElementById("dialogBox");
+const dialogText = document.getElementById("dialogText");
+const mission = document.getElementById("mission");
+const map = document.getElementById("map");
+
+const startBtn = document.getElementById("startBtn");
+
+const music = document.getElementById("music");
+
+const score = document.getElementById("score");
+
+/*=========================================
+            TAMAÑO DEL CANVAS
+=========================================*/
+
+function resizeCanvas(){
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+}
+
+resizeCanvas();
+
+window.addEventListener("resize", resizeCanvas);
+
+/*=========================================
+            VARIABLES
+=========================================*/
+
+let gameState = "menu";
+
+/*
+
+menu
+dialog
+mission
+map
+memory
+castle
+
+*/
+
+let recuerdos = 0;
+
+/*=========================================
+            NUBES
+=========================================*/
+
+const clouds = [];
+
+function createCloud(){
+
+    return{
+
+        x:Math.random()*canvas.width,
+
+        y:Math.random()*250,
+
+        size:70+Math.random()*70,
+
+        speed:0.2+Math.random()*0.5
+
+    };
+
+}
+
+for(let i=0;i<8;i++){
+
+    clouds.push(createCloud());
+
+}
+
+/*=========================================
+            DIBUJAR CIELO
+=========================================*/
+
+function drawSky(){
+
+    const gradient = ctx.createLinearGradient(
+        0,
+        0,
+        0,
+        canvas.height
+    );
+
+    gradient.addColorStop(0,"#6DB8FF");
+    gradient.addColorStop(.6,"#97DBFF");
+    gradient.addColorStop(1,"#C8F4FF");
+
+    ctx.fillStyle = gradient;
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+}
+
+/*=========================================
+            SOL
+=========================================*/
+
+function drawSun(){
+
+    ctx.beginPath();
+
+    ctx.arc(
+        canvas.width-120,
+        100,
+        45,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fillStyle="#FFE066";
+
+    ctx.fill();
+
+}
+
+/*=========================================
+            PASTO
+=========================================*/
+
+function drawGround(){
+
+    ctx.fillStyle="#45B649";
+
+    ctx.fillRect(
+
+        0,
+
+        canvas.height-120,
+
+        canvas.width,
+
+        120
+
+    );
+
+}
+
+/*=========================================
+            MONTAÑAS
+=========================================*/
+
+function drawMountains(){
+
+    ctx.fillStyle="#79C96A";
+
+    ctx.beginPath();
+
+    ctx.moveTo(0,canvas.height);
+
+    ctx.lineTo(220,240);
+
+    ctx.lineTo(440,canvas.height);
+
+    ctx.fill();
+
+    ctx.beginPath();
+
+    ctx.moveTo(280,canvas.height);
+
+    ctx.lineTo(650,170);
+
+    ctx.lineTo(980,canvas.height);
+
+    ctx.fill();
+
+}
+
+/*=========================================
+            NUBES
+=========================================*/
+
+function drawCloud(cloud){
+
+    ctx.fillStyle="white";
+
+    ctx.beginPath();
+
+    ctx.arc(cloud.x,cloud.y,cloud.size*.25,0,Math.PI*2);
+
+    ctx.arc(cloud.x+40,cloud.y-15,cloud.size*.30,0,Math.PI*2);
+
+    ctx.arc(cloud.x+80,cloud.y,cloud.size*.25,0,Math.PI*2);
+
+    ctx.fill();
+
+    ctx.fillRect(
+
+        cloud.x,
+
+        cloud.y,
+
+        80,
+
+        25
+
+    );
+
+}
+
+/*=========================================
+            ACTUALIZAR NUBES
+=========================================*/
+
+function updateClouds(){
+
+    clouds.forEach(cloud=>{
+
+        cloud.x+=cloud.speed;
+
+        if(cloud.x>canvas.width+150){
+
+            cloud.x=-150;
+
+            cloud.y=Math.random()*220;
+
+        }
+
+    });
+
+}
+
+/*=========================================
+            DIBUJAR FONDO
+=========================================*/
+
+function drawBackground(){
+
+    drawSky();
+
+    drawSun();
+
+    drawMountains();
+
+    updateClouds();
+
+    clouds.forEach(drawCloud);
+
+    drawGround();
+
+}
+
+/*=========================================
+            LOOP PRINCIPAL
+=========================================*/
+
+function gameLoop(){
+
+    ctx.clearRect(
+
+        0,
+        0,
+        canvas.width,
+        canvas.height
+
+    );
+
+    drawBackground();
+
+    requestAnimationFrame(gameLoop);
+
+}
+
+gameLoop();
+
+/*=========================================
+            BOTÓN INICIAR
+=========================================*/
+
+startBtn.addEventListener("click",()=>{
+
+    gameState="dialog";
+
+    menu.style.display="none";
+
+    hud.style.display="flex";
+
+    dialogBox.style.display="block";
+
+    if(music){
+
+        music.volume=.35;
+
+        music.play().catch(()=>{});
+
+    }
+
+    // Esta función la agregaremos
+    // en la Parte 2
+    iniciarHistoria();
+
+});
+/*==================================================
+                PARTE 2
+            HISTORIA Y DIÁLOGOS
+==================================================*/
+
+/*=========================================
+            HISTORIA
+=========================================*/
+
+const historia = [
+
+"Había una vez un jugador llamado Jaziel.",
+
+"No era un héroe porque tuviera la espada más poderosa.",
+
+"Ni porque hubiera derrotado a todos los monstruos del mundo.",
+
+"Era un héroe porque incluso en los días en los que sentía que ya no podía seguir...",
+
+"...encontraba la fuerza para dar un paso más.",
+
+"Su aventura no había sido sencilla.",
+
+"En algunos niveles el cielo estuvo despejado.",
+
+"Pero en otros aparecieron tormentas tan grandes que apenas podía ver el camino.",
+
+"Hubo enemigos invisibles que intentaban convencerlo de que no era suficiente.",
+
+"Y por momentos casi les creyó.",
+
+"Pero había algo que esos enemigos nunca entendieron.",
+
+"No importa cuántas veces un buen jugador pierda una partida.",
+
+"Siempre vuelve a presionar CONTINUAR.",
+
+"Así llegó al Nivel 29."
+
+];
+
+/*=========================================
+            VARIABLES
+=========================================*/
+
+let pagina = 0;
+
+let escribiendo = false;
+
+let textoCompleto = "";
+
+let indiceLetra = 0;
+
+let velocidadTexto = 28;
+
+let intervaloTexto;
+
+/*=========================================
+            ESCRIBIR TEXTO
+=========================================*/
+
+function escribirTexto(texto){
+
+    clearInterval(intervaloTexto);
+
+    textoCompleto = texto;
+
+    indiceLetra = 0;
+
+    escribiendo = true;
+
+    dialogText.innerHTML = "";
+
+    intervaloTexto = setInterval(()=>{
+
+        dialogText.innerHTML += texto.charAt(indiceLetra);
+
+        indiceLetra++;
+
+        if(indiceLetra >= texto.length){
+
+            clearInterval(intervaloTexto);
+
+            escribiendo = false;
+
+        }
+
+    },velocidadTexto);
+
+}
+
+/*=========================================
+            INICIAR HISTORIA
+=========================================*/
+
+function iniciarHistoria(){
+
+    pagina = 0;
+
+    escribirTexto(historia[pagina]);
+
+}
+
+/*=========================================
+            SIGUIENTE
+=========================================*/
+
+function siguienteDialogo(){
+
+    if(gameState !== "dialog") return;
+
+    if(escribiendo){
+
+        clearInterval(intervaloTexto);
+
+        dialogText.innerHTML = textoCompleto;
+
+        escribiendo = false;
+
+        return;
+
+    }
+
+    pagina++;
+
+    if(pagina >= historia.length){
+
+        terminarHistoria();
+
+        return;
+
+    }
+
+    escribirTexto(historia[pagina]);
+
+}
+
+/*=========================================
+            CONTROLES
+=========================================*/
+
+document.addEventListener("keydown",(e)=>{
+
+    if(e.code==="Enter" || e.code==="Space"){
+
+        siguienteDialogo();
+
+    }
+
+});
+
+dialogBox.addEventListener("click",()=>{
+
+    siguienteDialogo();
+
+});
+
+/*=========================================
+        TERMINAR HISTORIA
+=========================================*/
+
+function terminarHistoria(){
+
+    gameState="mission";
+
+    dialogBox.style.display="none";
+
+    mission.style.display="flex";
+
+    setTimeout(()=>{
+
+        mission.style.display="none";
+
+        map.style.display="flex";
+
+        gameState="map";
+
+    },3000);
+
+}
+/*==================================================
+                PARTE 3
+            MEMORYDEX
+==================================================*/
+
+/*=========================================
+        ELEMENTOS HTML
+=========================================*/
+
+const niveles = document.querySelectorAll(".level");
+
+const castillo = document.querySelector(".castle");
+
+const memoryCard = document.getElementById("memoryCard");
+
+const memoryTitle = document.getElementById("memoryTitle");
+
+const memoryImage = document.getElementById("memoryImage");
+
+const memoryDescription = document.getElementById("memoryDescription");
+
+const backButton = document.getElementById("backButton");
+
+/*=========================================
+        RECUERDOS
+=========================================*/
+
+const recuerdosInfo = [
+
+{
+
+titulo:"⭐ La primera vez que te vi",
+
+imagen:"recuerdo1.jpg",
+
+texto:"Ese día comenzó una aventura que jamás imaginé vivir. Sin saberlo, acababas de convertirte en una de las personas más importantes de mi vida."
+
+},
+
+{
+
+titulo:"❤️ Me ecanta estar contigo",
+
+imagen:"recuerdo2.jpg",
+
+texto:"Cada momento contigo me hizo descubrir a una persona increíble. Desde ese día supe que quería seguir creando recuerdos a tu lado."
+
+},
+
+{
+
+titulo:"🌎 Todo lo que admiro de ti",
+
+imagen:"recuerdo3.jpg",
+
+texto:"Admiro tu creatividad, tu corazón enorme y la forma en que nunca dejas de intentarlo, incluso cuando las cosas parecen difíciles."
+
+},
+
+{
+
+titulo:"🎮 Nuestra aventura",
+
+imagen:"recuerdo4.jpg",
+
+texto:"Es un provilegio estar contigo, quiero que juntos desbloqueemos nuevos niveles."
+
+}
+
+];
+
+/*=========================================
+        ABRIR RECUERDO
+=========================================*/
+
+function abrirRecuerdo(indice){
+
+    const recuerdo = recuerdosInfo[indice];
+
+    memoryTitle.textContent = recuerdo.titulo;
+
+    memoryImage.src = recuerdo.imagen;
+
+    memoryDescription.textContent = recuerdo.texto;
+
+    memoryCard.style.display="flex";
+
+    map.style.display="none";
+
+}
+
+/*=========================================
+        CERRAR RECUERDO
+=========================================*/
+
+backButton.addEventListener("click",()=>{
+
+    memoryCard.style.display="none";
+
+    map.style.display="flex";
+
+});
+
+/*=========================================
+        ESTRELLAS
+=========================================*/
+
+niveles.forEach((estrella,indice)=>{
+
+    estrella.addEventListener("click",()=>{
+
+        abrirRecuerdo(indice);
+
+        if(!estrella.classList.contains("completed")){
+
+            estrella.classList.add("completed");
+
+            estrella.innerHTML="✅";
+
+            recuerdos++;
+
+            score.textContent=recuerdos;
+
+        }
+
+        if(recuerdos===4){
+
+            castillo.style.animation="pulse 1s infinite";
+
+            castillo.style.filter="drop-shadow(0 0 15px gold)";
+
+        }
+
+    });
+
+});
+/*=========================================
+            ESCENA FINAL
+=========================================*/
+
+const finalScene = document.getElementById("finalScene");
+const playerFinal = document.getElementById("playerFinal");
+const counter = document.getElementById("counter");
+const birthdayMessage = document.getElementById("birthdayMessage");
+
+const stars = document.querySelectorAll("#finalScene .star");
+
+let estrellasFinal = 0;
+
+let jugadorX = 40;
+let jugadorY = 480;
+
+/*=========================================
+            ABRIR CASTILLO
+=========================================*/
+
+castillo.addEventListener("click",()=>{
+
+    if(recuerdos < 4){
+
+        alert("⭐ Primero debes completar todos los recuerdos.");
+
+        return;
+
+    }
+
+    map.style.display="none";
+    hud.style.display="none";
+
+    finalScene.style.display="flex";
+
+    actualizarJugador();
+
+});
+
+/*=========================================
+            MOVER JUGADOR
+=========================================*/
+
+function actualizarJugador(){
+
+    playerFinal.style.left = jugadorX + "px";
+    playerFinal.style.top = jugadorY + "px";
+
+}
+
+document.addEventListener("keydown",(e)=>{
+
+    if(finalScene.style.display!=="flex") return;
+
+    const velocidad = 15;
+
+    switch(e.key){
+
+        case "ArrowUp":
+            jugadorY -= velocidad;
+            break;
+
+        case "ArrowDown":
+            jugadorY += velocidad;
+            break;
+
+        case "ArrowLeft":
+            jugadorX -= velocidad;
+            break;
+
+        case "ArrowRight":
+            jugadorX += velocidad;
+            break;
+    }
+
+    jugadorX=Math.max(0,Math.min(760,jugadorX));
+    jugadorY=Math.max(0,Math.min(510,jugadorY));
+
+    actualizarJugador();
+
+    revisarEstrellas();
+
+});
+
+/*=========================================
+        RECOGER ESTRELLAS
+=========================================*/
+
+function revisarEstrellas(){
+
+    stars.forEach(star=>{
+
+        if(star.style.display==="none") return;
+
+        const x=parseInt(star.style.left);
+        const y=parseInt(star.style.top);
+
+        if(
+
+            Math.abs(jugadorX-x)<30 &&
+            Math.abs(jugadorY-y)<30
+
+        ){
+
+            star.style.display="none";
+
+            estrellasFinal++;
+
+            counter.textContent="⭐ "+estrellasFinal+" / 8";
+
+        }
+
+    });
+if(estrellasFinal===8){
+
+    birthdayMessage.style.display="flex";
+
+    setTimeout(()=>{
+birthdayMessage.style.display = "none";
+
+finalScene.style.display = "none";
+
+document.getElementById("credits").style.display = "flex";
+
+document.getElementById("restartBtn").style.display = "block";
+
+    },7000);
+
+}
+}
+const restartBtn = document.getElementById("restartBtn");
+
+restartBtn.addEventListener("click",()=>{
+
+    location.reload();
+
+});
